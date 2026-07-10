@@ -1,3 +1,7 @@
 module.exports = {
-  presets: [['miaoda-expo-devkit/babel-preset', { excludePaths: ['src/components/ui'] }]],
+  presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }]],
+  plugins: [
+    'nativewind/babel',
+    'react-native-reanimated/plugin',
+  ],
 };
