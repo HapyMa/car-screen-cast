@@ -51,64 +51,30 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 7. 执行 EAS 云端编译（Android APK，等待完成并输出下载链接）
+      # 7. EAS 云端编译 Android APK（等待完成）
       - name: EAS Build Android APK
         run: |
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
           echo "使用编译配置: $PROFILE"
-          eas build \
-            --platform android \
-            --profile "$PROFILE" \
-            --non-interactive \
-            --wait \
-            --json 2>/dev/null | tee eas_build_result.json || true
-          
-          # 提取 APK 下载地址
-          if [ -f eas_build_result.json ]; then
-            BUILD_URL=$(cat eas_build_result.json | python3 -c \
-              "import sys,json
-try:
-    d=json.load(sys.stdin)
-    if isinstance(d, list): d=d[0]
-    url=d.get('artifacts',{}).get('buildUrl','')
-    print(url)
-except: print('')" 2>/dev/null)
-            if [ -n "$BUILD_URL" ]; then
-              echo "✅ APK 编译成功！"
-              echo "📦 APK 下载地址: $BUILD_URL"
-              wget -q -O car-screen-cast.apk "$BUILD_URL" && echo "✅ APK 已下载到 Artifacts"
-            else
-              echo "构建结果: $(cat eas_build_result.json | head -5)"
-            fi
-          fi
+          eas build --platform android --profile "$PROFILE" --non-interactive --wait --json > eas_result.json 2>&1 || true
+          cat eas_result.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 8. 获取最新构建信息并下载 APK
-      - name: 下载 APK 产物
+      # 8. 提取 APK 下载链接并下载
+      - name: 下载 APK
         run: |
-          echo "等待构建完成（最多 30 分钟）..."
-          eas build:list \
-            --platform android \
-            --limit 1 \
-            --json \
-            --non-interactive | tee build_info.json
-          
-          BUILD_URL=$(cat build_info.json | python3 -c \
-            "import sys,json; builds=json.load(sys.stdin); \
-             print(builds[0].get('artifacts',{}).get('buildUrl','') if builds else '')")
-          
+          BUILD_URL=$(python3 -c "import json; d=json.load(open('eas_result.json')); b=d[0] if isinstance(d,list) else d; print(b.get('artifacts',{}).get('buildUrl',''))" 2>/dev/null || echo "")
           if [ -n "$BUILD_URL" ]; then
-            echo "APK 下载地址: $BUILD_URL"
-            wget -O car-screen-cast.apk "$BUILD_URL"
+            echo "APK_URL=$BUILD_URL" >> $GITHUB_ENV
+            echo "✅ APK 下载地址: $BUILD_URL"
+            wget -q -O car-screen-cast.apk "$BUILD_URL"
           else
-            echo "构建仍在进行中，请到 https://expo.dev 下载 APK"
+            echo "⚠️ 未能提取 APK 地址，请到 https://expo.dev/accounts/hapy88688/projects/car-screen-cast/builds 手动下载"
           fi
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         continue-on-error: true
 
-      # 9. 上传 APK 到 GitHub Artifacts（如果下载成功）
+      # 9. 上传 APK 到 GitHub Artifacts
       - name: 上传 APK 到 Artifacts
         uses: actions/upload-artifact@v4
         if: always()
