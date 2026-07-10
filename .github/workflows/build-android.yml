@@ -31,11 +31,9 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. 安装 pnpm
+      # 3. 安装 pnpm（从 package.json packageManager 字段自动读取版本）
       - name: 安装 pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.4
 
       # 4. 安装依赖（禁用 .pnpmfile.cjs 避免 EAS 服务器 hook 报错）
       - name: 安装项目依赖
