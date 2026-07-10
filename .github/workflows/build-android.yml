@@ -51,7 +51,13 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 7. 执行 EAS 云端编译（Android APK）
+      # 7. 初始化 EAS 项目（首次运行自动创建/关联项目）
+      - name: 初始化 EAS 项目
+        run: eas init --non-interactive --force
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # 8. 执行 EAS 云端编译（Android APK）
       - name: EAS Build Android APK
         run: |
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
