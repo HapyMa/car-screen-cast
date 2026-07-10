@@ -1,6 +1,7 @@
 {
   "name": "expo-template",
   "version": "1.0.0",
+  "packageManager": "pnpm@9.15.4",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
