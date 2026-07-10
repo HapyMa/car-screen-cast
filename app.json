@@ -2,7 +2,7 @@
   "expo": {
     "name": "车机投屏助手App",
     "slug": "car-screen-cast",
-    "version": "1.0.3",
+    "version": "1.0.5",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -39,6 +39,11 @@
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "appcx5rwxhpro5d"
+    "scheme": "appcx5rwxhpro5d",
+    "extra": {
+      "eas": {
+        "projectId": "69e79ee5-6656-4438-916f-927645f1aed4"
+      }
+    }
   }
 }
