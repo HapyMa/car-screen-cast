@@ -18,11 +18,17 @@
       },
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "NODE_ENV": "production"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "NODE_ENV": "production"
       }
     }
   },
