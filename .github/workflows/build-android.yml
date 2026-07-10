@@ -37,9 +37,12 @@ jobs:
         with:
           version: 9
 
-      # 4. 安装依赖
+      # 4. 安装依赖（禁用 .pnpmfile.cjs 避免 EAS 服务器 hook 报错）
       - name: 安装项目依赖
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          # 临时替换 .pnpmfile.cjs 为空 hook，避免 miaoda-expo-devkit require 在 EAS 服务器失败
+          echo "module.exports = { hooks: { readPackage: (pkg) => pkg } };" > .pnpmfile.cjs
+          pnpm install --no-frozen-lockfile
 
       # 5. 安装 EAS CLI
       - name: 安装 EAS CLI
