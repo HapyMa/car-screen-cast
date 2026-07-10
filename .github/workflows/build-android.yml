@@ -56,22 +56,24 @@ jobs:
         run: |
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
           echo "使用编译配置: $PROFILE"
-          eas build --platform android --profile "$PROFILE" --non-interactive --wait --json > eas_result.json 2>&1 || true
-          cat eas_result.json
+          eas build --platform android --profile "$PROFILE" --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 8. 提取 APK 下载链接并下载
+      # 8. 获取 APK 下载链接并下载
       - name: 下载 APK
         run: |
-          BUILD_URL=$(python3 -c "import json; d=json.load(open('eas_result.json')); b=d[0] if isinstance(d,list) else d; print(b.get('artifacts',{}).get('buildUrl',''))" 2>/dev/null || echo "")
+          eas build:list --platform android --limit 1 --non-interactive --json > build_list.json 2>/dev/null || true
+          BUILD_URL=$(python3 -c "import json; d=json.load(open('build_list.json')); print(d[0].get('artifacts',{}).get('buildUrl','') if d else '')" 2>/dev/null || echo "")
           if [ -n "$BUILD_URL" ]; then
-            echo "APK_URL=$BUILD_URL" >> $GITHUB_ENV
             echo "✅ APK 下载地址: $BUILD_URL"
-            wget -q -O car-screen-cast.apk "$BUILD_URL"
+            wget -q -O car-screen-cast.apk "$BUILD_URL" && echo "✅ APK 下载成功"
           else
-            echo "⚠️ 未能提取 APK 地址，请到 https://expo.dev/accounts/hapy88688/projects/car-screen-cast/builds 手动下载"
+            cat build_list.json || true
+            echo "⚠️ 请到 https://expo.dev/accounts/hapy88688/projects/car-screen-cast/builds 手动下载"
           fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         continue-on-error: true
 
       # 9. 上传 APK 到 GitHub Artifacts
