@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 软立体暗色车机主题 */
+    --background: 222 28% 11%;
+    --foreground: 210 40% 92%;
+    --card: 222 24% 15%;
+    --card-foreground: 210 40% 92%;
+    --popover: 222 28% 13%;
+    --popover-foreground: 210 40% 92%;
+    --primary: 210 88% 62%;
+    --primary-foreground: 222 28% 8%;
+    --secondary: 222 20% 20%;
+    --secondary-foreground: 210 30% 80%;
+    --muted: 222 20% 18%;
+    --muted-foreground: 210 20% 55%;
+    --accent: 265 70% 68%;
+    --accent-foreground: 222 28% 8%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 20% 22%;
+    --input: 222 20% 18%;
+    --ring: 210 88% 62%;
+    --radius: 1rem;
+  }
+}

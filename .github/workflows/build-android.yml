@@ -1,0 +1,99 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: '编译配置（preview=内测APK / production=正式APK）'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+
+jobs:
+  build-android:
+    name: 编译 Android APK
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉取代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 设置 Node.js
+      - name: 配置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. 安装 pnpm
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # 4. 安装依赖
+      - name: 安装项目依赖
+        run: pnpm install --frozen-lockfile
+
+      # 5. 安装 EAS CLI
+      - name: 安装 EAS CLI
+        run: npm install -g eas-cli
+
+      # 6. 登录 Expo 账号（通过 Secret EXPO_TOKEN）
+      - name: 登录 Expo
+        run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # 7. 执行 EAS 云端编译（Android APK）
+      - name: EAS Build Android APK
+        run: |
+          PROFILE="${{ github.event.inputs.profile || 'preview' }}"
+          echo "使用编译配置: $PROFILE"
+          eas build \
+            --platform android \
+            --profile "$PROFILE" \
+            --non-interactive \
+            --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # 8. 获取最新构建信息并下载 APK
+      - name: 下载 APK 产物
+        run: |
+          echo "等待构建完成（最多 30 分钟）..."
+          eas build:list \
+            --platform android \
+            --limit 1 \
+            --json \
+            --non-interactive | tee build_info.json
+          
+          BUILD_URL=$(cat build_info.json | python3 -c \
+            "import sys,json; builds=json.load(sys.stdin); \
+             print(builds[0].get('artifacts',{}).get('buildUrl','') if builds else '')")
+          
+          if [ -n "$BUILD_URL" ]; then
+            echo "APK 下载地址: $BUILD_URL"
+            wget -O car-screen-cast.apk "$BUILD_URL"
+          else
+            echo "构建仍在进行中，请到 https://expo.dev 下载 APK"
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        continue-on-error: true
+
+      # 9. 上传 APK 到 GitHub Artifacts（如果下载成功）
+      - name: 上传 APK 到 Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: car-screen-cast-apk
+          path: '*.apk'
+          if-no-files-found: warn
+          retention-days: 30

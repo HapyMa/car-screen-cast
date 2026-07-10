@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "车机投屏助手App",
+    "slug": "car-screen-cast",
+    "version": "1.0.3",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "buildNumber": "1",
+      "bundleIdentifier": "com.miaoda.appcx5rwxhpro5d"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#131928"
+      },
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 1,
+      "package": "com.miaoda.appcx5rwxhpro5d"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-sqlite",
+      "expo-font",
+      "expo-system-ui",
+      "@react-native-async-storage/expo-with-async-storage",
+      "expo-screen-orientation"
+    ],
+    "router": {
+      "root": "src"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "appcx5rwxhpro5d"
+  }
+}
