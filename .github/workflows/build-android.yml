@@ -25,57 +25,47 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # 2. 设置 Node.js
+      # 2. 设置 Java（Android 构建需要）
+      - name: 配置 Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. 设置 Node.js
       - name: 配置 Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. 安装 pnpm（从 package.json packageManager 字段自动读取版本）
+      # 4. 安装 pnpm（从 package.json packageManager 字段自动读取版本）
       - name: 安装 pnpm
         uses: pnpm/action-setup@v4
 
-      # 4. 安装依赖（禁用 .pnpmfile.cjs 避免 EAS 服务器 hook 报错）
+      # 5. 安装依赖
       - name: 安装项目依赖
         run: |
-          # 临时替换 .pnpmfile.cjs 为空 hook，避免 miaoda-expo-devkit require 在 EAS 服务器失败
           echo "module.exports = { hooks: { readPackage: (pkg) => pkg } };" > .pnpmfile.cjs
           pnpm install --no-frozen-lockfile
 
-      # 5. 安装 EAS CLI
+      # 6. 安装 EAS CLI
       - name: 安装 EAS CLI
         run: npm install -g eas-cli
 
-      # 6. 登录 Expo 账号（通过 Secret EXPO_TOKEN）
+      # 7. 登录 Expo
       - name: 登录 Expo
         run: eas whoami
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # 7. EAS 云端编译 Android APK（等待完成）
-      - name: EAS Build Android APK
+      # 8. 本地编译 Android APK（--local 在 runner 上运行，日志完全可见）
+      - name: EAS Build Android APK（本地）
         run: |
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
           echo "使用编译配置: $PROFILE"
-          eas build --platform android --profile "$PROFILE" --non-interactive --wait
+          eas build --platform android --profile "$PROFILE" --local --non-interactive --output ./car-screen-cast.apk
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      # 8. 获取 APK 下载链接并下载
-      - name: 下载 APK
-        run: |
-          eas build:list --platform android --limit 1 --non-interactive --json > build_list.json 2>/dev/null || true
-          BUILD_URL=$(python3 -c "import json; d=json.load(open('build_list.json')); print(d[0].get('artifacts',{}).get('buildUrl','') if d else '')" 2>/dev/null || echo "")
-          if [ -n "$BUILD_URL" ]; then
-            echo "✅ APK 下载地址: $BUILD_URL"
-            wget -q -O car-screen-cast.apk "$BUILD_URL" && echo "✅ APK 下载成功"
-          else
-            cat build_list.json || true
-            echo "⚠️ 请到 https://expo.dev/accounts/hapy88688/projects/car-screen-cast/builds 手动下载"
-          fi
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        continue-on-error: true
 
       # 9. 上传 APK 到 GitHub Artifacts
       - name: 上传 APK 到 Artifacts
